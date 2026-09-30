@@ -1,0 +1,17 @@
+{
+  "name": "dunyamiz",
+  "version": "1.0.0",
+  "description": "Dunyamiz - 3D Gezegen, Kitalar, Ulkeler ve Sehirler",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'Ready'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2"
+  }
+}

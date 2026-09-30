@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dünyamız - 3D İnteraktif Kıtalar, Ülkeler ve Şehirler Rehberi</title>
+  <meta name="description" content="Dünyamız 3D interaktif küresi ile gezegenimizi, 7 kıtayı, ülkeleri, başkentleri ve şehirleri derinlemesine keşfedin.">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Three.js 3D WebGL Library (Offline APK uyumlu) -->
+  <script src="three.min.js"></script>
+  <script>
+    if (typeof THREE === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\\/script>');
+    }
+  </script>
+</head>
+<body>
+
+  <!-- Kozmik Arka Plan & Işıltı -->
+  <div class="cosmic-background"></div>
+  <div class="aurora-blur"></div>
+
+  <!-- 3D WebGL Canvas Container -->
+  <div id="globe-container"></div>
+
+  <!-- Üst Gezinme Menüsü -->
+  <header class="navbar">
+    <div class="brand-logo" id="brand-logo" onclick="window.app && window.app.navigateToWorld()">
+      <div class="brand-icon-wrapper">
+        <img src="earth_logo.jpg" alt="Dünyamız" class="brand-earth-img">
+      </div>
+      <div class="brand-text">
+        <h1>DÜNYAMIZ</h1>
+        <span>İnteraktif Gezegen Rehberi</span>
+      </div>
+    </div>
+
+    <!-- Canlı Akıllı Arama Motoru -->
+    <div class="search-wrapper">
+      <div class="search-input-box">
+        <span class="search-icon">🔍</span>
+        <input 
+          type="text" 
+          id="search-input" 
+          class="search-input" 
+          placeholder="Kıta, Ülke, Başkent veya Şehir ara... (örn: Türkiye, Tokyo)" 
+          autocomplete="off"
+        >
+      </div>
+      <div id="search-results" class="search-results-dropdown"></div>
+    </div>
+
+    <!-- Hızlı Aksiyon Butonları -->
+    <div class="nav-actions">
+      <button id="btn-random" class="btn-nav" title="Dünyadan rastgele bir şehir keşfet">
+        <span>🎲</span>
+        <span>Rastgele Keşfet</span>
+      </button>
+
+      <button id="btn-quiz" class="btn-nav" title="Coğrafya Bilgi Yarışması Oyna">
+        <span>🏆</span>
+        <span>Bilgi Yarışması</span>
+      </button>
+
+      <button id="btn-toggle-rotate" class="btn-nav active-glow" title="Küre dönüşünü aç/kapat">
+        <span>🔄</span>
+        <span>Dönüş</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Breadcrumb Gezinme Çubuğu: Dünya > Kıta > Ülke > Şehir -->
+  <nav id="breadcrumb-bar" class="breadcrumb-bar" aria-label="Gezinme Yolu">
+    <!-- Dinamik doldurulur -->
+  </nav>
+
+  <!-- Sol Alt Küre Kontrolleri HUD -->
+  <div class="globe-controls-hud">
+    <div class="hud-pill">
+      <span>🖱️ Sürükle: Döndür • Tekerlek: Yakınlaş</span>
+    </div>
+    <button id="btn-reset-view" class="btn-icon-control" title="Görünümü Sıfırla (Dünya'ya Dön)">
+      🌍
+    </button>
+  </div>
+
+  <!-- Sağ Panel: Hiyerarşik Bilgi & Keşif Kartları -->
+  <aside id="main-panel" class="main-overlay-panel" aria-label="Detay Keşif Paneli">
+    <div class="panel-header">
+      <div class="panel-title-area">
+        <div id="panel-icon" class="panel-title-icon">🌍</div>
+        <div>
+          <h2 id="panel-title" class="panel-title">Dünyamız</h2>
+          <div id="panel-subtitle" class="panel-subtitle">7 Kıta • 195 Ülke</div>
+        </div>
+      </div>
+      <button id="panel-close-btn" class="panel-close-btn" title="Paneli Gizle/Aç">✕</button>
+    </div>
+
+    <div id="panel-body" class="panel-body">
+      <!-- Dinamik seviye içeriği render edilecek -->
+    </div>
+  </aside>
+
+  <!-- Coğrafya Bilgi Yarışması (Mini Quiz) Modalı -->
+  <div id="quiz-modal" class="modal-backdrop">
+    <div class="quiz-modal">
+      <div class="quiz-header">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span style="font-size: 1.5rem;">🏆</span>
+          <h3 style="font-family: var(--font-heading); font-size: 1.2rem;">Coğrafya Bilgi Yarışması</h3>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+          <span id="quiz-score" class="quiz-score-badge">Puan: 0 / 8</span>
+          <button id="quiz-close-btn" class="panel-close-btn" style="width: 28px; height: 28px;">✕</button>
+        </div>
+      </div>
+
+      <div id="quiz-question" class="quiz-question-box">
+        <!-- Soru metni -->
+      </div>
+
+      <div id="quiz-options" class="quiz-options">
+        <!-- Şıklar -->
+      </div>
+
+      <div id="quiz-feedback" class="quiz-feedback">
+        <!-- Doğru / Yanlış bilgisi -->
+      </div>
+
+      <button id="quiz-next-btn" class="quiz-next-btn">Sonraki Soru ➔</button>
+    </div>
+  </div>
+
+  <!-- Toast Bildirim -->
+  <div id="toast-notice" class="toast-notice"></div>
+
+  <!-- Uygulama Scriptleri -->
+  <script src="data.js"></script>
+  <script src="globe.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

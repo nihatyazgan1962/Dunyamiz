@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Dünyamız</string>
+    <string name="title_activity_main">Dünyamız</string>
+    <string name="package_name">com.dunyamiz.app</string>
+    <string name="custom_url_scheme">com.dunyamiz.app</string>
+</resources>

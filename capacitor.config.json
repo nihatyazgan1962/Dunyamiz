@@ -1,0 +1,6 @@
+{
+  "appId": "com.dunyamiz.app",
+  "appName": "Dünyamız",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
