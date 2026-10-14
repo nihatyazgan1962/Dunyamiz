@@ -532,7 +532,7 @@ class App {
   }
 
   // 3. ÜLKE GÖRÜNÜMÜ (Dil ve Din Vurgulu)
-  renderCountryView() {
+  async renderCountryView() {
     const cont = this.state.activeContinent;
     const country = this.state.activeCountry;
 
@@ -543,7 +543,8 @@ class App {
     const capitalCity = country.cities.find(c => c.isCapital) || country.cities[0];
     const otherCities = country.cities.filter(c => !c.isCapital);
 
-    this.panelBody.innerHTML = `
+    // Temel Ülke ve Başkent HTML'i
+    const baseHtml = `
       <div class="world-hero-card">
         <div class="world-hero-title">${country.flag} ${country.name} Genel Bilgileri</div>
         <div class="world-hero-desc">${country.summary}</div>
@@ -588,31 +589,17 @@ class App {
           ${capitalCity.highlights.map(h => `<span class="landmark-pill">📍 ${h}</span>`).join('')}
         </div>
       </div>
-
-      <!-- DİĞER ÖNEMLİ ŞEHİRLER -->
-      ${otherCities.length > 0 ? `
-        <div class="section-heading">
-          <span>Diğer Önemli Şehirler (${otherCities.length})</span>
-          <span style="font-size: 0.75rem; color: var(--primary);">Şehre uçmak için tıkla</span>
+      
+      <div id="cities-container">
+        <div style="text-align: center; padding: 2rem; color: var(--text-dim);">
+          <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">⏳</span>
+          Tüm şehirler internetten yükleniyor...
         </div>
-
-        <div class="other-cities-list">
-          ${otherCities.map(city => `
-            <div class="city-card" data-id="${city.id}">
-              <div class="city-card-header">
-                <span class="city-title">🏙️ ${city.name}</span>
-                <span class="city-pop">👥 ${city.population}</span>
-              </div>
-              <div class="city-desc">${city.description}</div>
-              <div class="landmarks-tags" style="margin-top: 0.5rem;">
-                ${city.highlights.slice(0, 3).map(h => `<span class="landmark-pill" style="font-size: 0.7rem;">📍 ${h}</span>`).join('')}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      ` : ''}
+      </div>
     `;
-
+    
+    this.panelBody.innerHTML = baseHtml;
+    
     const btnCapital = document.getElementById('btn-goto-capital');
     if (btnCapital) {
       btnCapital.addEventListener('click', () => {
@@ -620,7 +607,82 @@ class App {
       });
     }
 
-    this.panelBody.querySelectorAll('.city-card').forEach(card => {
+    // Şehirleri İnternetten (API) Çekme
+    const citiesContainer = document.getElementById('cities-container');
+    let fetchedCitiesHtml = '';
+
+    try {
+      // Ülke id'sini API'nin beklediği İngilizce formata dönüştür
+      let apiCountryName = country.id.replace(/-/g, ' ');
+      if (apiCountryName === 'uk') apiCountryName = 'united kingdom';
+      if (apiCountryName === 'usa') apiCountryName = 'united states';
+
+      const response = await fetch('https://countriesnow.space/api/v0.1/countries/cities', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ country: apiCountryName })
+      });
+      
+      const resData = await response.json();
+      
+      if (!resData.error && resData.data && resData.data.length > 0) {
+        // API'den başarıyla veriler alındı
+        const apiCities = resData.data.filter(c => c.toLowerCase() !== capitalCity.name.toLowerCase());
+        
+        fetchedCitiesHtml = `
+          <div class="section-heading">
+            <span>Tüm Şehirler (${apiCities.length})</span>
+            <span style="font-size: 0.75rem; color: var(--primary);">İnternet API</span>
+          </div>
+          <div class="other-cities-list">
+            ${apiCities.map(cityName => `
+              <div class="city-card" style="cursor: default;">
+                <div class="city-card-header">
+                  <span class="city-title">🏙️ ${cityName}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } else {
+        throw new Error("Şehir bulunamadı veya API hatası");
+      }
+    } catch (e) {
+      // Çevrimdışı Durum veya Hata - Varsayılan (Kayıtlı) Şehirleri Göster
+      console.warn("API üzerinden şehirler çekilemedi, çevrimdışı listeye geçiliyor: ", e);
+      
+      if (otherCities.length > 0) {
+        fetchedCitiesHtml = `
+          <div class="section-heading">
+            <span>Diğer Önemli Şehirler (${otherCities.length})</span>
+            <span style="font-size: 0.75rem; color: var(--text-dim);">Çevrimdışı Mod</span>
+          </div>
+
+          <div class="other-cities-list">
+            ${otherCities.map(city => `
+              <div class="city-card offline-city-btn" data-id="${city.id}">
+                <div class="city-card-header">
+                  <span class="city-title">🏙️ ${city.name}</span>
+                  <span class="city-pop">👥 ${city.population}</span>
+                </div>
+                <div class="city-desc">${city.description}</div>
+                <div class="landmarks-tags" style="margin-top: 0.5rem;">
+                  ${city.highlights.slice(0, 3).map(h => `<span class="landmark-pill" style="font-size: 0.7rem;">📍 ${h}</span>`).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } else {
+        fetchedCitiesHtml = `<div style="text-align: center; color: var(--text-dim); margin-top: 1rem;">Başka kayıtlı şehir bulunamadı.</div>`;
+      }
+    }
+    
+    // Yükleme animasyonu olan kısmı sonuç ile değiştir
+    citiesContainer.innerHTML = fetchedCitiesHtml;
+
+    // Eğer çevrimdışı şehirler yüklendiyse tıklama eventi ekle
+    citiesContainer.querySelectorAll('.offline-city-btn').forEach(card => {
       card.addEventListener('click', () => {
         const id = card.getAttribute('data-id');
         this.navigateToCity(cont.id, country.id, id);

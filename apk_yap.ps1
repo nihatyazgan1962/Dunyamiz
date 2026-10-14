@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 
 Write-Host "=========================================" -ForegroundColor Yellow
 Write-Host "   DUNYAMIZ APK OLUSTURUCU BASLADI   " -ForegroundColor Yellow
@@ -15,7 +15,7 @@ if (-not (Test-Path $wwwDir)) {
     New-Item -ItemType Directory -Path $wwwDir -Force | Out-Null
 }
 
-$filesToCopy = @("index.html", "app.js", "style.css", "favicon.png")
+$filesToCopy = @("index.html", "app.js", "styles.css", "data.js", "globe.js", "three.min.js", "earth_logo.jpg")
 foreach ($file in $filesToCopy) {
     $src = Join-Path $rootDir $file
     if (Test-Path $src) {
@@ -75,5 +75,7 @@ HATA: Gradle derlemesi basarisiz oldu. Exit code: $LASTEXITCODE" -ForegroundColo
 }
 
 Set-Location $rootDir
-Write-Host "Cikmak icin ENTER tusuna basin..." -ForegroundColor Yellow
-Read-Host
+if (-not [Console]::IsInputRedirected) {
+    Write-Host "Cikmak icin ENTER tusuna basin..." -ForegroundColor Yellow
+    try { Read-Host } catch {}
+}
